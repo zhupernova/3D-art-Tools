@@ -3,20 +3,6 @@ import math as ma
 import random as rand
 from functools import partial
 
-#TODO: after building is built, create roof.
-#TODO: redesign the UI = fixed
-#TODO: make it so multisided building can have more than 1 side = fixed
-#TODO: texture functionality = maybe later
-#TODO: fix step warning = fixed
-#TODO: fix list index out of range error = fixed
-#TODO: if no building side is supplied then use default one. = fixed
-#TODO: if obj in a group error out
-#TODO: why 7 not work for multiSide=fixed
-#TODO: delete old groups = fixed
-#TODO: Remove item from any groups = Fixed
-#TODO: fix namespace issue
-#TODO: maybe error out if object with same name exists
-
 #user will select a wall they have created and it will create a building
 
 class BuildingCreator():
