@@ -10,8 +10,7 @@ class lightManagerFunctions():
         pass
 
 
-#get list of lights
-#make a list/array of light types. add a function depending on the light type selected
+#get list of lights to pass into the textScroll
 
     def sceneLights(self):
 
@@ -40,7 +39,7 @@ class lightManagerFunctions():
         cmds.setAttr(light + '.shadowColor', shadowColor[0],shadowColor[1],shadowColor[2],type="double3")
 
 
-
+#UI for everything.
 class LightUI():
 
     def __init__(self):
