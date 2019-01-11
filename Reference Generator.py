@@ -6,12 +6,6 @@ from functools import partial
 import maya.mel as mel
 
 
-# This will create plane and add a reference image to it
-# TODO: Get the reference image and get the size
-# TODO: Create plane to fit the size of the image
-# TODO: Apply the image to the plane
-# TODO: Optional stuff to come later
-
 def imageSize(imagePath):
     image = om.MImage()
     image.readFromFile(imagePath)
@@ -274,7 +268,8 @@ class rGenUI():
 
         applyTex(topV,sideV,frontV)
 
-
+refGen = rGenUI()
+refGen.refWindow()
 
 
 
