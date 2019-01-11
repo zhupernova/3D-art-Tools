@@ -1,3 +1,5 @@
+#Bug fixes needed
+
 import maya.cmds as cmds
 import math as ma
 import random as rand
