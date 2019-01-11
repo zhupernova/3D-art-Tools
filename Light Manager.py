@@ -1,17 +1,5 @@
-#TODO: create a light manager
-#TODO: get list of lights within the scene.
-#TODO: window will rename lights, adjust settings for lights
-
-#TODO: step 1: get light list in textscrollLayout - done
-#TODO: step 2: function for when light is selected
-#TODO: step 3: create unique functions depending on the light selected - done
-#TODO: step 4: make sure tools do what they are suppose to
-#TODO: step 5: add the specific tools to the menu
-
-
 import maya.cmds as cmds
 import sys
-
 
 
 class lightManagerFunctions():
@@ -307,8 +295,8 @@ class LightUI():
 
 
 
-
-    #special functions per the light
+lightUI = LightUI()
+lightUI.mainWindow()
 
 
 
