@@ -1,6 +1,8 @@
+#need to update menu functionality
+
 import maya.cmds as cmds
 import sys
-
+from functools import partial
 
 class lightManagerFunctions():
 
