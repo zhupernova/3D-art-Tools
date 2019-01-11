@@ -370,8 +370,8 @@ class BuildCreatorUI():
 
 
 
-
-
+bCreator = BuildCreatorUI()
+bCreator.bWindowMain()
 
 
 
