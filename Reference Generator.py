@@ -80,10 +80,6 @@ def createPlaneF(fPlane, *args):
 
 
 def applyTex(iPathT, iPathS, iPathF):
-    # TODO: make Material
-    # TODO: connect image file to material
-    # TODO: connect material to object
-    # TODO: make sure the uvs are all correct
 
     mel.eval('hyperShadePanelMenuCommand("hyperShadePanel", "deleteUnusedNodes");')
 
