@@ -1,18 +1,17 @@
-#Bug fixes needed
-
 import maya.cmds as cmds
 import math as ma
 import random as rand
 from functools import partial
 
 #user will select a wall they have created and it will create a building
-
 class BuildingCreator():
     def __init__(self):
         pass
 
     #get the size of walls
     def getSizes(self, object, *args):
+
+        self.unGroupObj(object)
 
         shapes = cmds.listRelatives(object, shapes=True)
         objSize = cmds.listRelatives(object, parent=True)
@@ -76,9 +75,8 @@ class BuildingCreator():
         else:
             self.squareWall = cmds.ls(sl=True,dag=True)
 
-
         squareBuildingSizeList = self.getSizes(self.squareWall)
-        self.name = cmds.rename(self.squareWall[0], name,ignoreShape=True)
+        self.squareName = cmds.rename(self.squareWall[0], name, ignoreShape=True)
 
         objWidth = squareBuildingSizeList[0]
         objHeight = squareBuildingSizeList[1]
@@ -89,27 +87,25 @@ class BuildingCreator():
         zPivot = (objLength/2)
 
         #set centerPivot to the object and freeze transforms
-        cmds.xform(self.name, cp = True)
+        cmds.xform(self.squareName, cp = True)
         cmds.makeIdentity(apply=True, t=1, r=1, s=1, n=0)
-        cmds.move(xPivot, -(yPivot), zPivot, self.name + '.scalePivot', self.name + '.rotatePivot', os = True, relative = True)
+        cmds.move(xPivot, -(yPivot), zPivot, self.squareName + '.scalePivot', self.squareName + '.rotatePivot', os = True, relative = True)
 
         buildingWalls = []
         #move the pivot point of the object
         #first Axis
         bWidth = 1
         while bWidth <= width:
-            self.bWallL1 = cmds.duplicate(rc=True)
+            cmds.duplicate(rc=True)
             cmds.move(-objWidth,0,0,ls=True,r=True)
             bWidth += 1
-            buildingWalls.append(self.bWallL1)
         cmds.rotate(0, -90, 0)
 
         bLength = 1
         while bLength <= length:
-            self.bWallW1 = cmds.duplicate(rc=True)
+            cmds.duplicate(rc=True)
             cmds.move(0,0,-objWidth, ls=True,r=True)
             bLength += 1
-            buildingWalls.append(self.bWallW1)
         cmds.rotate(0, 180, 0)
 
         bWidth = 1
@@ -117,18 +113,16 @@ class BuildingCreator():
             cmds.duplicate(rc=True)
             cmds.move(objWidth,0,0,ls=True,r=True)
             bWidth += 1
-            buildingWalls.append()
         cmds.rotate(0, 90, 0)
 
         bLength = 1
         while bLength < length:
             cmds.duplicate(rc=True)
             cmds.move(0,0,objWidth,ls=True, r=True)
-            buildingWalls.append()
             bLength += 1
 
 
-        cmds.group('%s*'% self.name, n='%s*'% self.name +'_'+ 'Floors_',a=True)
+        self.squareFloors = cmds.group('%s*'% self.squareName, n='%s*'% self.squareName +'_'+ 'Floors_',a=True)
 
         bHeight = 0
         while bHeight < (height-1):
@@ -136,33 +130,37 @@ class BuildingCreator():
             cmds.move(0,objHeight,0,ls=True,r=True)
             bHeight += 1
 
-        cmds.group('%s*'% self.name +'_'+ buildingName +'_'+'Floors_*', n='%s' %buildingName + '_Building_',a=True)
+        cmds.group('%s*'%self.squareFloors, n='%s'%buildingName,a=True)
         cmds.select(clear=True)
+
+        self.deleteOldGroups()
 
 
     def multiBuilding(self, name, bname, sides, width, height, *args):
 
-        mWall = cmds.ls(sl=True, dag=True)
-        self.walls = mWall[]
-        if (len(self.mWall)<=0):
+        wallSection = cmds.ls(sl=True, dag=True)
+        print wallSection
+
+        if (len(wallSection) <= 0):
             buildingWall = self.defaultBuilding()
             cmds.select('Wall')
-            self.mWall = cmds.ls(sl=True,dag=True)
+            self.multiWall = cmds.ls(sl=True, dag=True)
+        else:
+            self.multiWall = cmds.ls(sl=True, dag=True)
 
-        self.name = cmds.rename(self.mWall[0], name, ignoreShape=True)
-        mList = self.getSizes()
+        mList = self.getSizes(self.multiWall)
+        self.multiName = cmds.rename(self.multiWall[0], name, ignoreShape=True)
+
 
         objLength = mList[0]
         objHeight = mList[1]
         objWidth = mList[2]
 
         sides1 = objLength * width
-        print objLength
-        print sides1
-        print self.name
 
-        cmds.xform(self.name, cp=True)
+        cmds.xform(self.multiName, cp=True)
         cmds.makeIdentity(apply=True, t=1, r=1, s=1, n=0)
+
         apotheom = sides1/(2*(ma.tan(ma.pi/sides)))
         apothTrue = apotheom - abs(objWidth/2)
 
@@ -174,10 +172,10 @@ class BuildingCreator():
             cmds.duplicate(rc=True)
             cmds.move(-objLength, 0, 0, ls=True, r=True)
             NumSides += 1
-        self.bSide = cmds.group(name + '*', n='wall')
+        self.multiSide = cmds.group('%s*'% self.multiName, n= name + '_side_')
 
-        cmds.xform(self.bSide, cp=True)
-        cmds.move(0,0,-apothTrue, self.bSide + '.scalePivot', self.bSide + '.rotatePivot', ws = True, relative = True)
+        cmds.xform(self.multiSide, cp=True)
+        cmds.move(0,0,-apothTrue, self.multiSide + '.scalePivot', self.multiSide + '.rotatePivot', ws = True, relative = True)
 
         angles = float(float(360)/float(sides))
         print angles
@@ -186,7 +184,7 @@ class BuildingCreator():
             cmds.duplicate(rc=True)
             cmds.rotate(0,angles,0,ws = True, relative = True)
 
-        cmds.group(a=True)
+        self.multiFloors = cmds.group('%s*'% self.multiSide, n='%s*'% self.multiSide +'_'+ 'Floors_',a=True)
 
         bHeight = 0
         while bHeight < (height - 1):
@@ -194,9 +192,11 @@ class BuildingCreator():
             cmds.move(0, objHeight, 0, ls=True, r=True)
             bHeight += 1
 
-        cmds.group('%s' %self.name, n='%s' %bname, a=True)
-        cmds.xform('%s*'% bname, cp=True)
+        self.multiBuilding = cmds.group('%s*'% self.multiFloors, n='%s' % bname, a=True)
+        cmds.xform('%s*'% self.multiBuilding, cp=True)
         cmds.move(0,0,0,rpr=True)
+
+        cmds.select(clear=True)
 
         self.deleteOldGroups()
 
@@ -228,12 +228,13 @@ class BuildingCreator():
             if rel == None:
                 cmds.delete(t)
 
-    def ungroupObj(self,object):
+    def unGroupObj(self,object,*args):
 
-        objParent = bool(cmds.listRelatives(object, allParents=True))
-        if objParent == True:
+        objParent = bool(cmds.listRelatives(object[0], allParents=True))
+        if objParent is True:
             cmds.parent(object, world=True)
 
+        return
 
 
 class BuildCreatorUI():
@@ -329,7 +330,7 @@ class BuildCreatorUI():
 
     def create(self, *args):
 
-        self.Building = BuildingMaker()
+        self.building = BuildingCreator()
 
         sectionName = cmds.textFieldGrp(self.nameField,q=True,text=True)
         groupName = cmds.textFieldGrp(self.buildingNameRect, q=True, text=True)
@@ -346,17 +347,15 @@ class BuildCreatorUI():
         heightM = cmds.intSliderGrp(self.mHeight, q=True, value=True)
 
         if sR:
-            self.Building.squareBuilding(sectionName,groupName,widthS,lengthS,heightS)
+            self.building.squareBuilding(sectionName,groupName,widthS,lengthS,heightS)
 
         if mR:
-            self.Building.multiBuilding(sectionName,groupName,sidesM,sideLengthM, heightM)
+            self.building.multiBuilding(sectionName,groupName,sidesM,sideLengthM, heightM)
 
     def close(self):
 
         if cmds.window(self.name, q = True, exists = True):
             cmds.deleteUI(self.name)
-
-
 
 bCreator = BuildCreatorUI()
 bCreator.bWindowMain()
