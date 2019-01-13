@@ -6,6 +6,12 @@ from functools import partial
 import maya.mel as mel
 
 
+# This will create plane and add a reference image to it
+# TODO: Get the reference image and get the size
+# TODO: Create plane to fit the size of the image
+# TODO: Apply the image to the plane
+# TODO: Optional stuff to come later
+
 def imageSize(imagePath):
     image = om.MImage()
     image.readFromFile(imagePath)
@@ -39,7 +45,7 @@ def createPlaneT(tPlane, *args):
         topPlane = cmds.polyPlane(name='topView', width=float(widthTop / 10), height=float(heightTop / 10), sx=0,
                                   sy=0)
     cmds.rotate(0, 180, 0, topPlane)
-    cmds.move(0, -((heightTop / 10) / 2), 0, ws=True, r=True)
+    cmds.move(0, (-(heightTop/25) * 2), 0, ws=True, r=True)
 
 def createPlaneS(sPlane, *args):
 
@@ -58,7 +64,7 @@ def createPlaneS(sPlane, *args):
                                    sx=0,
                                    sy=0)
     cmds.rotate(90.0, 180.0, 0.0, sidePlane)
-    cmds.move(0, 0, ((heightSide/ 10) / 2), r=True)
+    cmds.move(0, 0,((heightSide/15) * 2), r=True)
 
 def createPlaneF(fPlane, *args):
 
@@ -75,11 +81,15 @@ def createPlaneF(fPlane, *args):
         frontPlane = cmds.polyPlane(name='frontView', width=float(widthFront / 10), height=float(heightFront / 10),
                                     sx=0, sy=0)
     cmds.rotate(0.0, 90.0, -90.0, frontPlane)
-    cmds.move(-((widthFront / 10) / 2), 0, 0, r=True)
+    cmds.move((-(widthFront/15) * 2),0,0, r=True)
 
 
 
 def applyTex(iPathT, iPathS, iPathF):
+    # TODO: make Material
+    # TODO: connect image file to material
+    # TODO: connect material to object
+    # TODO: make sure the uvs are all correct
 
     mel.eval('hyperShadePanelMenuCommand("hyperShadePanel", "deleteUnusedNodes");')
 
@@ -263,6 +273,7 @@ class rGenUI():
             frontV = cmds.textField(self.front, q=True, text=True)
 
         applyTex(topV,sideV,frontV)
+
 
 refGen = rGenUI()
 refGen.refWindow()
