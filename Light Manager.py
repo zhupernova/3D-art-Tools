@@ -1,8 +1,7 @@
-#need to update menu functionality
-
 import maya.cmds as cmds
 import sys
-from functools import partial
+
+
 
 class lightManagerFunctions():
 
@@ -10,42 +9,62 @@ class lightManagerFunctions():
         pass
 
 
-#get list of lights to pass into the textScroll
+#get list of lights
+#make a list/array of light types. add a function depending on the light type selected
 
-    def sceneLights(self):
+    def standardLights(self):
 
-        lightList = []
+        lightsList = []
+        lightStr = 'Light'
 
-        lightList = cmds.ls(lights=True)
+        lightList = cmds.ls(lights=True,shapes=True)
 
         for lights in lightList:
-            if cmds.nodeType(lights):
-                return lightList
+            sceneLights = cmds.nodeType(lights)
+
+            if lightStr in sceneLights:
+                lightsList.append(lights)
+
+        return lightsList
 
         return "Error"
 
-    def lightIntensity(self,light,intensity):
 
+    def setLightIntensity(self,light,intensity):
         cmds.setAttr(light + '.intensity', intensity)
 
-    def lightColor(self,light,color):
+    def getLightIntensity(self,light):
+        gLIntensity = cmds.getAttr(light + '.intensity')
+        return gLIntensity
 
+    def setLightColor(self,light,color):
         cmds.setAttr(light + '.color', color[0],color[1],color[2],type="double3")
 
     def lightName(self,light,name):
         cmds.rename(light,name)
 
-    def shadowColor(self,light,shadowColor):
+    def setShadowColor(self,light,shadowColor):
         cmds.setAttr(light + '.shadowColor', shadowColor[0],shadowColor[1],shadowColor[2],type="double3")
 
+    def spotLightPenumbra(self,sLight,*args):
+        pass
 
-#UI for everything.
+    def spotLightConeAngle(self,sLight,*args):
+        pass
+
+    def spotLightDropOff(self,sLight,*args):
+        pass
+
+
+
+
+
+
 class LightUI():
 
     def __init__(self):
 
         self.lmFunc = lightManagerFunctions()
-        lightID = 0
 
         if cmds.window('LightManager', exists=True):
             cmds.deleteUI('LightManager')
@@ -79,6 +98,7 @@ class LightUI():
         self.deleteButton = cmds.button('Delete',label='Delete',width=123)
         self.copyLightButton = cmds.button('Copy', label='Copy Light',width=118)
         self.closeButton = cmds.button('Close', label='Close',width=118)
+
 
         self.commonAttrs = cmds.frameLayout('Common Attributes', width = 360,height=155, marginHeight = 3, collapsable=False, enable=False, visible=True, parent=self.secondForm)
         self.lightRename = cmds.textFieldGrp('Rename',label='Rename', width = 100,columnWidth2 = (79,275), columnAttach = (1,'right',2),parent=self.commonAttrs)
@@ -152,6 +172,8 @@ class LightUI():
         cmds.button('Copy', edit=True, command=self.copyButton)
         cmds.button('Close', edit=True, command=('cmds.deleteUI(\"' + self.lightManagerWindow + '\", window=True)'))
 
+
+
         cmds.showWindow(self.lightManagerWindow)
 
 
@@ -178,7 +200,8 @@ class LightUI():
         else:
             lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
             newColor = cmds.colorSliderGrp('ColorSlider',q=True,rgb=True)
-            cmds.setAttr(lightN + '.color', newColor[0], newColor[1], newColor[2], type="double3")
+            self.lmFunc.setLightColor(lightN, newColor)
+
 
 
     def shadowColorSlider(self,*args):
@@ -189,7 +212,37 @@ class LightUI():
         else:
             lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
             newColor = cmds.colorSliderGrp(self.shadowColor,q=True,rgb=True)
-            cmds.setAttr(lightN + '.shadowColor', newColor[0], newColor[1], newColor[2], type="double3")
+            self.lmFunc.setShadowColor(lightN, newColor)
+
+
+    def getIntensityAttr(self, *args):
+
+
+
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            intLight = cmds.getAttr(light + '.intensity')
+            cmds.floatSliderGrp('Intensity', e=True, value=intLight)
+
+    def getColorAttr(self, *args):
+
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            colLight = cmds.getAttr(light + '.color')[0]
+            cmds.colorSliderGrp('ColorSlider', e=True, rgb=(colLight[0],colLight[1],colLight[2]))
+
+    def getShadowColorAttr(self, *args):
+
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            shadLight = cmds.getAttr(light + '.shadowColor')[0]
+            cmds.colorSliderGrp('ShadowSlider', e=True, rgb=(shadLight[0],shadLight[1],shadLight[2]))
 
 
     def intensityIntSlider(self,*args):
@@ -200,7 +253,11 @@ class LightUI():
         else:
             lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
             intensityLight = cmds.floatSliderGrp('Intensity', q=True, value=True)
-            self.lmFunc.lightIntensity(lightN, intensityLight)
+            self.lmFunc.setLightIntensity(lightN, intensityLight)
+
+
+
+
 
 
     def copyButton(self,*args):
@@ -228,16 +285,11 @@ class LightUI():
             self.refreshImportedLightList()
 
 
+
+
     def lightControls(self,*args):
 
         lights = cmds.textScrollList(self.lightList, q = True, selectItem = True)
-        lightsOff = cmds.textScrollList(self.lightList, q=True, selectItem=False)
-
-        if lightsOff:
-            cmds.frameLayout(self.commonAttrs, edit=True, enable=False)
-            cmds.frameLayout(self.directionalMenu, edit=True, visible=False)
-            cmds.frameLayout(self.ambientMenu, edit=True, visible=False)
-
 
 
         if len(lights) != 0:
@@ -245,7 +297,9 @@ class LightUI():
 
         selLights = cmds.select(lights)
 
-
+        self.getIntensityAttr()
+        self.getColorAttr()
+        self.getShadowColorAttr()
 
         for light in lights:
 
@@ -281,6 +335,7 @@ class LightUI():
                 cmds.frameLayout(self.volumeMenu,edit=True, visible=False)
 
 
+
     def spotLightControls(self):
         pass
 
@@ -289,10 +344,23 @@ class LightUI():
     def refreshImportedLightList(self,*args):
         cmds.textScrollList(self.lightList,e=True,removeAll=True)
 
-        if self.lmFunc.sceneLights() != "Error":
+        if self.lmFunc.standardLights() != "Error":
 
-            for lights in self.lmFunc.sceneLights():
+            for lights in self.lmFunc.standardLights():
                 cmds.textScrollList(self.lightList,e=True, selectIndexedItem = 1, append = lights)
+
+
+    #get the attr and set that as the setting for the light attr per the light selected
+
+    def getLightColorAttr(self):
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+
+
+        lightcolor = cmds.getAttr(light + '.color')
 
 
 
