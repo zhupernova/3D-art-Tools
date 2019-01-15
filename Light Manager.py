@@ -46,18 +46,17 @@ class lightManagerFunctions():
     def setShadowColor(self,light,shadowColor):
         cmds.setAttr(light + '.shadowColor', shadowColor[0],shadowColor[1],shadowColor[2],type="double3")
 
-    def spotLightPenumbra(self,sLight,*args):
-        pass
+    def spotLightPenumbraAngle(self,sLight,penumbra):
+        cmds.setAttr(sLight + '.penumbraAngle', penumbra)
 
-    def spotLightConeAngle(self,sLight,*args):
-        pass
+    def spotLightConeAngle(self,sLight,cone):
+        cmds.setAttr(sLight + '.coneAngle',cone)
 
-    def spotLightDropOff(self,sLight,*args):
-        pass
+    def spotLightDropOff(self,sLight,dropoff):
+        cmds.setAttr(sLight + '.dropoff',dropoff)
 
-
-
-
+    def ambientLightShade(self,aLight,aShade):
+        cmds.setAttr(aLight + '.ambientShade',aShade)
 
 
 class LightUI():
@@ -71,7 +70,7 @@ class LightUI():
 
     def mainWindow(self):
 
-        self.lightManagerWindow = cmds.window('LightManager', widthHeight=(1000,1000),menuBar = True,sizeable=False)
+        self.lightManagerWindow = cmds.window('LightManager', widthHeight=(700,1000),menuBar = True,sizeable=False)
 
 
         #Menu Items
@@ -104,12 +103,12 @@ class LightUI():
         self.lightRename = cmds.textFieldGrp('Rename',label='Rename', width = 100,columnWidth2 = (79,275), columnAttach = (1,'right',2),parent=self.commonAttrs)
         self.lightIntensity = cmds.floatSliderGrp('Intensity', label='Intensity', field=True, minValue=0.000, maxValue=10.000, value=1.000, step=0.001, width=20, columnAttach = (1,'right',5),columnWidth3 = (80,50,140),dragCommand = self.intensityIntSlider)
         self.lightColor = cmds.colorSliderGrp('ColorSlider',label='Light Color',width=20,columnAttach = (1,'right',5), columnWidth3 = (80,50,140),dragCommand = self.lightColorSlider)
-        self.shadowColor = cmds.colorSliderGrp('ShadowSlider', label = 'Shadow Color', width=20,columnAttach = (1,'right',5), columnWidth3 = (80,50,140),dragCommand = self.shadowColorSlider)
+        self.shadowColor = cmds.colorSliderGrp('ShadowSlider', label = 'Shadow Color', width=20,columnAttach = (1,'right',5), columnWidth3 = (80,50,140), dragCommand = self.shadowColorSlider)
         self.illumByDefault = cmds.checkBox('illumByDefault', label = 'Illuminate by Default')
 
         #ambientMenu
         self.ambientMenu = cmds.frameLayout('Ambient Light Attributes',width = 360,collapsable=False,visible=False,parent=self.secondForm)
-        self.ambientShade = cmds.floatSliderGrp('ambShade', label = 'Ambient Shade', field=True,minValue= 0.000, maxValue = 1.000, value=0.500, step = 0.001, width =20, columnAttach = (1,'right',5),columnWidth3 = (84,50,140), parent = self.ambientMenu)
+        self.ambientShade = cmds.floatSliderGrp('ambShade', label = 'Ambient Shade', field=True,minValue= 0.000, maxValue = 1.000, value=0.500, step = 0.001, width =20, columnAttach = (1,'right',5),columnWidth3 = (84,50,140), parent = self.ambientMenu, dragCommand = self.ambientShadeControls)
 
         #directionalMenu
         self.directionalMenu = cmds.frameLayout('Directional Light Attributes', width = 360,collapsable=False,visible=False,parent=self.secondForm)
@@ -123,9 +122,9 @@ class LightUI():
 
         # spotMenu
         self.spotMenu = cmds.frameLayout('Spot Light Attributes', width=360, collapsable=False, visible=False, marginHeight = 5, parent=self.secondForm)
-        self.spotCone = cmds.floatSliderGrp('coneAngle', label ='Cone Angle', field=True, minValue = 0.5000, maxValue = 179.5000, value = 40.000, step = 0.0001, width=20,parent=self.spotMenu)
-        self.spotPenum = cmds.floatSliderGrp('penumAngle', label='Penumbra Angle', field=True, minValue=-179.5000, maxValue=179.5000, value=0.000, step=0.0001, width=20, parent=self.spotMenu)
-        self.spotDropOff = cmds.floatSliderGrp('dropOff', label = 'Dropoff', field=True,minValue = 0.0000, maxValue = 1.0000, value = 0.0000, step = 0.0001,width=20,parent=self.spotMenu)
+        self.spotCone = cmds.floatSliderGrp('coneAngle', label ='Cone Angle', field=True, minValue = 0.500, maxValue = 179.500, value = 40.000, step = 0.001, width=20,columnAttach = (1,'right',5),columnWidth3 = (84,50,140), parent=self.spotMenu,  dragCommand = self.spotLightConeAngleControls)
+        self.spotPenum = cmds.floatSliderGrp('penumAngle', label='Penumbra', field=True, minValue=-10.000, maxValue=10.000, value=0.000, step=0.001, width=20, columnAttach = (1,'right',5),columnWidth3 = (84,50,140), parent=self.spotMenu, dragCommand = self.spotLightPenumAngleControls)
+        self.spotDropOff = cmds.floatSliderGrp('dropOff', label = 'Dropoff', field=True,minValue = 0.000, maxValue = 255.000, value = 0.000, step = 0.001,width=20, columnAttach = (1,'right',5),columnWidth3 = (84,50,140), parent=self.spotMenu, dragCommand = self.spotLightDropoffControls)
 
         #areaMenu
         self.areaMenu = cmds.frameLayout('Area Light Attributes', width = 360, collapsable=False,visible=False,parent=self.secondForm)
@@ -165,84 +164,19 @@ class LightUI():
                                                                (self.closeButton, 'left', 500)
                                                                ))
 
-
         cmds.button('RefreshLightList', edit=True, command=self.refreshImportedLightList)
         cmds.button('Rename',edit=True,command=self.lightName)
         cmds.button('Delete',edit=True, command = self.deleteLight)
         cmds.button('Copy', edit=True, command=self.copyButton)
         cmds.button('Close', edit=True, command=('cmds.deleteUI(\"' + self.lightManagerWindow + '\", window=True)'))
-
-
-
         cmds.showWindow(self.lightManagerWindow)
 
 
-    #common functions among the lights
-
-    def deleteLight(self,*args):
-
-        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
-            cmds.error('Nothing is Selected')
-            return
-        else:
-            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
-            cmds.select(lightN)
-            cmds.delete()
-            self.refreshImportedLightList()
-
-
-    def lightColorSlider(self,*args):
-
-
-        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
-            cmds.error('Nothing is Selected')
-            return
-        else:
-            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
-            newColor = cmds.colorSliderGrp('ColorSlider',q=True,rgb=True)
-            self.lmFunc.setLightColor(lightN, newColor)
-
-
-
-    def shadowColorSlider(self,*args):
-
-        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
-            cmds.error('Nothing is Selected')
-            return
-        else:
-            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
-            newColor = cmds.colorSliderGrp(self.shadowColor,q=True,rgb=True)
-            self.lmFunc.setShadowColor(lightN, newColor)
-
-
-    def getIntensityAttr(self, *args):
-
-
-
-        light = cmds.ls(sl=True, dag=True)[0]
-        if len(light) <= 0:
-            return
-        else:
-            intLight = cmds.getAttr(light + '.intensity')
-            cmds.floatSliderGrp('Intensity', e=True, value=intLight)
-
-    def getColorAttr(self, *args):
-
-        light = cmds.ls(sl=True, dag=True)[0]
-        if len(light) <= 0:
-            return
-        else:
-            colLight = cmds.getAttr(light + '.color')[0]
-            cmds.colorSliderGrp('ColorSlider', e=True, rgb=(colLight[0],colLight[1],colLight[2]))
-
-    def getShadowColorAttr(self, *args):
-
-        light = cmds.ls(sl=True, dag=True)[0]
-        if len(light) <= 0:
-            return
-        else:
-            shadLight = cmds.getAttr(light + '.shadowColor')[0]
-            cmds.colorSliderGrp('ShadowSlider', e=True, rgb=(shadLight[0],shadLight[1],shadLight[2]))
+    #######################################################################################
+    #
+    # common UI Elements
+    #
+    #######################################################################################
 
 
     def intensityIntSlider(self,*args):
@@ -256,41 +190,31 @@ class LightUI():
             self.lmFunc.setLightIntensity(lightN, intensityLight)
 
 
-
-
-
-
-    def copyButton(self,*args):
-        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
-            cmds.error('Nothing is Selected')
-            return
-        else:
-            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
-            cmds.select(lightN)
-            cmds.duplicate()
-            self.refreshImportedLightList()
-
-
-
-    def lightName(self, *args):
+    def lightColorSlider(self,*args):
 
         if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
             cmds.error('Nothing is Selected')
             return
         else:
             lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
-            newName = cmds.textFieldGrp('Rename', q=True,text=True)
-
-            self.lmFunc.lightName(lightN, newName)
-            self.refreshImportedLightList()
+            newColor = cmds.colorSliderGrp('ColorSlider',q=True,rgb=True)
+            self.lmFunc.setLightColor(lightN, newColor)
 
 
+    def shadowColorSlider(self, *args):
+
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+            newColor = cmds.colorSliderGrp(self.shadowColor, q=True, rgb=True)
+            self.lmFunc.setShadowColor(lightN, newColor)
 
 
     def lightControls(self,*args):
 
         lights = cmds.textScrollList(self.lightList, q = True, selectItem = True)
-
 
         if len(lights) != 0:
             cmds.frameLayout(self.commonAttrs,edit=True,enable=True)
@@ -310,6 +234,7 @@ class LightUI():
 
             if cmds.nodeType(light) == 'ambientLight':
                 cmds.frameLayout(self.ambientMenu,edit=True, visible=True)
+                self.getambientShadeAttr()
             else:
                 cmds.frameLayout(self.ambientMenu,edit=True, visible=False)
 
@@ -321,8 +246,12 @@ class LightUI():
 
             if cmds.nodeType(light) == 'spotLight':
                 cmds.frameLayout(self.spotMenu,edit=True, visible=True)
+                self.getSpotConeAttr()
+                self.getSpotPenumAttr()
+                self.getSpotDropoffAttr()
             else:
                 cmds.frameLayout(self.spotMenu,edit=True, visible=False)
+
 
             if cmds.nodeType(light) == 'areaLight':
                 cmds.frameLayout(self.areaMenu,edit=True, visible=True)
@@ -336,31 +265,188 @@ class LightUI():
 
 
 
-    def spotLightControls(self):
-        pass
+    #######################################################################################
+    #
+    # button Controls
+    #
+    #######################################################################################
 
+    def copyButton(self,*args):
 
-
-    def refreshImportedLightList(self,*args):
-        cmds.textScrollList(self.lightList,e=True,removeAll=True)
-
-        if self.lmFunc.standardLights() != "Error":
-
-            for lights in self.lmFunc.standardLights():
-                cmds.textScrollList(self.lightList,e=True, selectIndexedItem = 1, append = lights)
-
-
-    #get the attr and set that as the setting for the light attr per the light selected
-
-    def getLightColorAttr(self):
         if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
             cmds.error('Nothing is Selected')
             return
         else:
             lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+            cmds.select(lightN)
+            cmds.duplicate()
+            self.refreshImportedLightList()
 
 
-        lightcolor = cmds.getAttr(light + '.color')
+    def refreshImportedLightList(self, *args):
+
+        cmds.textScrollList(self.lightList, e=True, removeAll=True)
+        if self.lmFunc.standardLights() != "Error":
+            for lights in self.lmFunc.standardLights():
+                cmds.textScrollList(self.lightList, e=True, selectIndexedItem=1, append=lights)
+
+
+    def deleteLight(self, *args):
+
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+            cmds.select(lightN)
+            cmds.delete()
+            self.refreshImportedLightList()
+
+
+    def lightName(self, *args):
+
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+            newName = cmds.textFieldGrp('Rename', q=True, text=True)
+            self.lmFunc.lightName(lightN, newName)
+            self.refreshImportedLightList()
+
+
+    #######################################################################################
+    #
+    # ambientLightControl
+    #
+    #######################################################################################
+
+    def ambientShadeControls(self,*args):
+
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+        if cmds.nodeType(lightN) == 'ambientLight':
+            ambShade = cmds.floatSliderGrp(self.ambientShade, q=True, value=True)
+            self.lmFunc.ambientLightShade(lightN, ambShade)
+
+    #get the attrs for ambientShades
+    def getambientShadeAttr(self, *args):
+
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            ambShade = cmds.getAttr(light + '.ambientShade')
+            cmds.floatSliderGrp('ambShade', e=True, value= ambShade)
+
+
+    #######################################################################################
+    #
+    # spotLightControls
+    #
+    #######################################################################################
+
+    def spotLightConeAngleControls(self,*args):
+
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+        if cmds.nodeType(lightN) == 'spotLight':
+            coneAngle = cmds.floatSliderGrp(self.spotCone, q=True, value=True)
+            self.lmFunc.spotLightConeAngle(lightN, coneAngle)
+
+
+    def spotLightPenumAngleControls(self,*args):
+
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+        if cmds.nodeType(lightN) == 'spotLight':
+            penumAngle = cmds.floatSliderGrp(self.spotPenum, q=True, value=True)
+            self.lmFunc.spotLightPenumbraAngle(lightN, penumAngle)
+
+
+    def spotLightDropoffControls(self,*args):
+
+        if (cmds.textScrollList(self.lightList, q=True, selectItem=True)) is None:
+            cmds.error('Nothing is Selected')
+            return
+        else:
+            lightN = cmds.textScrollList(self.lightList, q=True, selectItem=True)[0]
+        if cmds.nodeType(lightN) == 'spotLight':
+            dropoff = cmds.floatSliderGrp(self.spotDropOff, q=True, value=True)
+            self.lmFunc.spotLightDropOff(lightN, dropoff)
+
+
+    #get the attrs of the SpotLight Attrs
+    def getSpotConeAttr(self, *args):
+
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            coneAngle = cmds.getAttr(light + '.coneAngle')
+            cmds.floatSliderGrp('coneAngle', e=True, value= coneAngle)
+
+
+    def getSpotPenumAttr(self, *args):
+
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            penumAngle = cmds.getAttr(light + '.penumbraAngle')
+            cmds.floatSliderGrp('penumAngle', e=True, value = penumAngle)
+
+
+    def getSpotDropoffAttr(self, *args):
+
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            dropoff = cmds.getAttr(light + '.dropoff')
+            cmds.floatSliderGrp('dropOff', e=True, value = dropoff)
+
+
+    #######################################################################################
+    #
+    # get the attr and set that as the setting for the light attr per the light selected
+    #
+    #######################################################################################
+
+    def getIntensityAttr(self, *args):
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            intLight = cmds.getAttr(light + '.intensity')
+            cmds.floatSliderGrp('Intensity', e=True, value=intLight)
+
+
+    def getColorAttr(self, *args):
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            colLight = cmds.getAttr(light + '.color')[0]
+            cmds.colorSliderGrp('ColorSlider', e=True, rgb=(colLight[0], colLight[1], colLight[2]))
+
+
+    def getShadowColorAttr(self, *args):
+        light = cmds.ls(sl=True, dag=True)[0]
+        if len(light) <= 0:
+            return
+        else:
+            shadLight = cmds.getAttr(light + '.shadowColor')[0]
+            cmds.colorSliderGrp('ShadowSlider', e=True, rgb=(shadLight[0], shadLight[1], shadLight[2]))
 
 
 
