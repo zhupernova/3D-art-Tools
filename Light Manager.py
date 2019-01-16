@@ -1,3 +1,10 @@
+#Light Manager
+#Gets a list of standard lights in the scene
+#and lets the user change the color and intensity
+#also lets the user delete, rename and copy the scene lights as well
+
+
+
 import maya.cmds as cmds
 import sys
 
