@@ -1,3 +1,11 @@
+#Building Creator
+#Creates a building after selecting a user created wall Section.
+#If no wall section is available, a default wall will be used
+#
+#
+
+
+
 import maya.cmds as cmds
 import math as ma
 import random as rand
